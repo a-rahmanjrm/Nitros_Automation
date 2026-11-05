@@ -1,0 +1,23 @@
+[
+  {
+    "attribute": "aria-label",
+    "default": "Our Valued Customer",
+    "item": "CustomerNameAnchor",
+    "transform": "title",
+    "variable": "CX_name"
+  },
+  {
+    "attribute": "text",
+    "default": "",
+    "item": "CopilotSummary",
+    "transform": "",
+    "variable": "Copilot Summary"
+  },
+  {
+    "variable": "Problem_Description",
+    "item": "ProblemDescription",
+    "attribute": "text",
+    "transform": "",
+    "default": ""
+  }
+]

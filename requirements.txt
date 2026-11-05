@@ -1,0 +1,18 @@
+# Nitros Automation: Python dependencies
+# Install: pip install -r requirements.txt
+
+# Browser automation
+selenium>=4.20,<5
+webdriver-manager>=4.0
+
+# Local web UI
+flask>=3.0,<4
+
+# Excel input/output
+openpyxl>=3.1,<4
+
+# Secure credential storage (Windows Credential Manager / macOS Keychain)
+keyring>=25.0
+
+# Optional: only needed for web/verify_ui.py (then run: playwright install chromium)
+# playwright>=1.40

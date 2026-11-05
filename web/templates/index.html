@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>Nitros Automation</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="{{ url_for('static', filename='ui.css') }}">
+</head>
+<body>
+
+<header class="appbar">
+  <div class="logo" aria-hidden="true">N</div>
+  <div class="brand"><b>Nitros</b><small>Automation</small></div>
+  <nav class="seg seg-top" aria-label="Sections">
+    <button type="button" data-tab="setup">Setup</button>
+    <button type="button" data-tab="locators">Locators</button>
+    <button type="button" data-tab="templates">Templates</button>
+    <button type="button" data-tab="flows">Flows</button>
+    <button type="button" data-tab="scrape">Scrape data</button>
+    <button type="button" data-tab="run">Run</button>
+  </nav>
+  <div class="status" id="app-status" data-state="idle" role="status"><span class="dot"></span><span id="app-status-text">Idle</span></div>
+</header>
+
+<main class="page">
+
+  <!-- SETUP -->
+  <section class="view" id="view-setup" aria-labelledby="t-setup">
+    <h1 class="page-title" id="t-setup">Setup</h1>
+    <p class="page-sub">Credentials, files and browser profile.</p>
+    <form id="setup-form" autocomplete="off">
+
+      <div class="section">
+        <div class="section-label">Genesys <span class="spacer"></span><span class="pill pill-muted" id="pass-state" hidden>Saved</span></div>
+        <div class="card">
+          <div class="field">
+            <label for="genesys_user">User</label>
+            <div class="control"><input id="genesys_user" name="genesys_user"></div>
+          </div>
+          <div class="field">
+            <label for="genesys_password">Password</label>
+            <div class="control">
+              <input id="genesys_password" name="genesys_password" type="password" placeholder="Leave blank to keep current">
+              <button type="button" class="icon-btn" id="toggle-pass" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="genesys_place">Place ID</label>
+            <div class="control"><input id="genesys_place" name="genesys_place" class="mono"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Agent</div>
+        <div class="card">
+          <div class="field">
+            <label for="agent_name">Display name <code>{agent_name}</code></label>
+            <div class="control"><input id="agent_name" name="agent_name"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Workbooks</div>
+        <div class="card">
+          <div class="field">
+            <label for="locators_path">Locators.xlsx</label>
+            <div class="control">
+              <input id="locators_path" name="locators_path" class="mono path" dir="rtl">
+              <button type="button" class="icon-btn" aria-label="Copy path" data-copy="locators_path"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="cases_path">Cases.xlsx</label>
+            <div class="control">
+              <input id="cases_path" name="cases_path" class="mono path" dir="rtl">
+              <button type="button" class="icon-btn" aria-label="Copy path" data-copy="cases_path"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Endpoints</div>
+        <div class="card grid-2">
+          <div class="field">
+            <label for="crm_url">CRM</label>
+            <div class="control"><input id="crm_url" name="crm_url" type="url" inputmode="url"></div>
+          </div>
+          <div class="field">
+            <label for="dialer_url">Dialer</label>
+            <div class="control"><input id="dialer_url" name="dialer_url" type="url" inputmode="url"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Chrome</div>
+        <div class="card grid-2">
+          <div class="field">
+            <label for="chrome_user_data_dir">User data folder</label>
+            <div class="control"><input id="chrome_user_data_dir" name="chrome_user_data_dir" class="mono" placeholder="Dedicated profile"></div>
+            <div class="hint">Leave blank to use a dedicated profile in data/chrome_profile.</div>
+          </div>
+          <div class="field">
+            <label for="chrome_profile_dir">Profile folder</label>
+            <div class="control"><input id="chrome_profile_dir" name="chrome_profile_dir" class="mono"></div>
+            <div class="hint" id="profile-state"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <span>Credentials are stored in Windows Credential Manager, never in these files.</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- LOCATORS -->
+  <section class="view" id="view-locators" aria-labelledby="t-locators">
+    <h1 class="page-title" id="t-locators">Locators</h1>
+    <p class="page-sub">Read from Locators.xlsx. Changes here are written to the file.</p>
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="input" id="loc-search" type="search" placeholder="Search name or value" aria-label="Search locators">
+      </div>
+      <select class="select" id="loc-filter" aria-label="Filter by strategy">
+        <option value="">All strategies</option>
+        <option>XPATH</option><option>ID</option><option>CSS_SELECTOR</option><option>NAME</option><option>CLASS_NAME</option><option>TAG_NAME</option>
+      </select>
+      <button type="button" class="btn btn-primary" id="loc-add">Add locator</button>
+    </div>
+    <div class="count" id="loc-count"></div>
+    <div id="loc-list" class="list"></div>
+    <div class="table-wrap desk-only" id="loc-table-wrap" hidden>
+      <table class="data">
+        <thead><tr><th>Name</th><th>Strategy</th><th>Match</th><th>Attribute</th><th>Value</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="loc-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TEMPLATES -->
+  <section class="view" id="view-templates" aria-labelledby="t-templates">
+    <h1 class="page-title" id="t-templates">Templates</h1>
+    <p class="page-sub">Plain text with placeholders in braces, for example {CX_name} or {case_number}.</p>
+    <div class="toolbar" style="grid-template-columns: 1fr auto">
+      <div class="muted" id="tpl-count" style="align-self:center"></div>
+      <button type="button" class="btn btn-primary" id="tpl-new">New template</button>
+    </div>
+    <div id="tpl-list" class="list" style="margin-top:14px"></div>
+  </section>
+
+  <!-- FLOWS -->
+  <section class="view" id="view-flows" aria-labelledby="t-flows">
+    <h1 class="page-title" id="t-flows">Flows</h1>
+    <p class="page-sub">Each flow is a list of steps that run in order. Pick a flow to edit it.</p>
+    <div class="toolbar" style="grid-template-columns: 1fr auto">
+      <div class="muted" id="flow-count" style="align-self:center"></div>
+      <button type="button" class="btn" id="flow-new">New flow</button>
+    </div>
+    <div id="flow-list" class="list" style="margin-top:14px"></div>
+
+    <div class="section" id="flow-editor" hidden>
+      <div class="section-label">Editing <span class="spacer"></span>
+        <button type="button" class="btn btn-ghost" id="flow-edit-meta" style="min-height:36px;padding:0 10px;text-transform:none;letter-spacing:0">Rename</button>
+        <button type="button" class="btn btn-danger" id="flow-delete" style="min-height:36px;padding:0 10px;text-transform:none;letter-spacing:0">Delete flow</button>
+      </div>
+      <div class="card">
+        <div class="card-pad">
+          <div class="row-between">
+            <div>
+              <div class="item-title" id="fe-name"></div>
+              <div class="muted" style="font-size:13px" id="fe-cat"></div>
+            </div>
+            <span class="pill" id="fe-status"></span>
+          </div>
+        </div>
+      </div>
+      <div class="list" id="fe-steps" style="margin-top:10px"></div>
+      <button type="button" class="btn btn-block" id="step-add" style="margin-top:10px">Add step</button>
+    </div>
+  </section>
+
+  <!-- SCRAPE -->
+  <section class="view" id="view-scrape" aria-labelledby="t-scrape">
+    <h1 class="page-title" id="t-scrape">Scrape data</h1>
+    <p class="page-sub">Copies a locator's text into a variable that templates can use, such as {CX_name}.</p>
+    <div class="section">
+      <div class="card card-pad">
+        <div class="row-between">
+          <div>
+            <div class="item-title">Variables</div>
+            <div class="muted" style="font-size:13px" id="scrape-progress-text">Loading</div>
+          </div>
+          <div class="item-actions">
+            <button type="button" class="btn" id="scrape-export">Export JSON</button>
+            <button type="button" class="btn" id="scrape-add">Add variable</button>
+          </div>
+        </div>
+        <div class="progress" style="margin-top:12px" aria-hidden="true"><span id="scrape-progress"></span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-label">Configured</div>
+      <div id="scrape-list" class="list"></div>
+    </div>
+  </section>
+
+  <!-- RUN -->
+  <section class="view" id="view-run" aria-labelledby="t-run">
+    <h1 class="page-title" id="t-run">Run</h1>
+    <p class="page-sub" id="run-summary">Choose the flows, then start.</p>
+    <div class="section">
+      <div class="section-label">Configuration</div>
+      <div class="card grid-2">
+        <div class="field">
+          <label for="run-setup">Setup flow (runs once)</label>
+          <div class="control"><select id="run-setup" class="select" style="min-height:40px;border:0;background:transparent;padding:0"></select></div>
+        </div>
+        <div class="field">
+          <label for="run-case">Case flow (runs for each case)</label>
+          <div class="control"><select id="run-case" class="select" style="min-height:40px;border:0;background:transparent;padding:0"></select></div>
+        </div>
+        <div class="field">
+          <label>Cases</label>
+          <div class="item-title" id="run-cases">Loading</div>
+          <div class="hint" id="run-cases-hint"></div>
+        </div>
+        <div class="field">
+          <label>Progress</label>
+          <div class="progress" style="margin-top:8px" aria-hidden="true"><span id="run-progress"></span></div>
+          <div class="hint" id="run-progress-text">Not started</div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-label">Live log <span class="spacer"></span>
+        <label class="row-between" style="margin:0;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--muted)">
+          Auto-scroll
+          <span class="switch"><input type="checkbox" id="run-autoscroll" checked aria-label="Auto-scroll log"><span></span></span>
+        </label>
+      </div>
+      <div class="log" id="run-log" role="log" aria-live="polite"><div class="empty"><span>No run yet.</span></div></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Sticky action bar: one slot per tab, only the active one is shown -->
+<div class="actionbar" id="actionbar">
+  <div class="actionbar-inner" data-bar="setup" hidden>
+    <button type="button" class="btn" id="setup-discard" disabled>Discard</button>
+    <button type="submit" form="setup-form" class="btn btn-primary" id="setup-save" disabled>Save setup</button>
+  </div>
+  <div class="actionbar-inner" data-bar="locators" hidden></div>
+  <div class="actionbar-inner" data-bar="templates" hidden></div>
+  <div class="actionbar-inner" data-bar="flows" hidden>
+    <button type="button" class="btn btn-primary" id="flows-save" disabled>Save flows</button>
+  </div>
+  <div class="actionbar-inner" data-bar="scrape" hidden>
+    <button type="button" class="btn btn-primary" id="scrape-save" disabled>Save variables</button>
+  </div>
+  <div class="actionbar-inner" data-bar="run" hidden>
+    <button type="button" class="btn btn-danger" id="run-stop" disabled>Stop</button>
+    <button type="button" class="btn btn-primary" id="run-start">Run automation</button>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Sections">
+  <button type="button" class="tab" data-tab="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Setup</button>
+  <button type="button" class="tab" data-tab="locators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Locators</button>
+  <button type="button" class="tab" data-tab="templates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Templates</button>
+  <button type="button" class="tab" data-tab="flows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5V12a4 4 0 0 0 4 4h5.5"/></svg>Flows</button>
+  <button type="button" class="tab" data-tab="scrape"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>Scrape</button>
+  <button type="button" class="tab" data-tab="run"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>Run</button>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+  <svg class="i-err" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/setup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/locators.js') }}"></script>
+<script src="{{ url_for('static', filename='js/templates.js') }}"></script>
+<script src="{{ url_for('static', filename='js/flows.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scrape.js') }}"></script>
+<script src="{{ url_for('static', filename='js/run.js') }}"></script>
+</body>
+</html>

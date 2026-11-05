@@ -1,0 +1,47 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Secrets & local config ---
+.env
+*.env
+
+# --- Browser profile (cookies, sessions — never commit) ---
+data/chrome_profile/
+
+# --- Runtime output ---
+errors/
+logs/
+*.log
+
+# --- Testing ---
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Personal / work data (never commit to a public repo) ---
+# Your settings: URLs, agent name, local paths. Created by the Setup tab.
+data/config.json
+# Run logs and failure screenshots can contain customer names and case numbers.
+data/logs/
+# Your case list. Regenerate a blank one with: python excel/make_templates.py --cases
+excel/Cases.xlsx
+# Your own message templates. A generic starter is written on first run.
+data/message_templates/
+# Screenshots anywhere
+*.png
+!docs/**/*.png

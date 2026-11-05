@@ -1,0 +1,192 @@
+[
+  {
+    "category": "Setup",
+    "name": "Dialer login",
+    "steps": [
+      {
+        "item": "",
+        "label": "Open dialer in its own tab",
+        "operation": "new_tab",
+        "template": "",
+        "value": "{dialer_url}",
+        "wait": 3
+      },
+      {
+        "item": "DialerLoginUser",
+        "label": "Enter Genesys user",
+        "operation": "send_keys",
+        "template": "",
+        "value": "{genesys_user}",
+        "wait": 1
+      },
+      {
+        "item": "DialerLoginPass",
+        "label": "Enter password",
+        "operation": "send_enter",
+        "template": "",
+        "value": "{genesys_password}",
+        "wait": 1
+      },
+      {
+        "item": "DialerPlaceID",
+        "label": "Enter place ID",
+        "operation": "send_enter",
+        "template": "",
+        "value": "{genesys_place}",
+        "wait": 10
+      }
+    ]
+  },
+  {
+    "category": "Case",
+    "name": "Search and open case",
+    "steps": [
+      {
+        "item": "GlobalSearchBox",
+        "label": "click on search box",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 3
+      },
+      {
+        "item": "GlobalSearchBox",
+        "label": "send case number",
+        "operation": "send_keys",
+        "template": "",
+        "value": "{case_number}",
+        "wait": 5
+      },
+      {
+        "item": "FirstSearchResult",
+        "label": "Open first result",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 2
+      },
+      {
+        "item": "",
+        "label": "Read customer name",
+        "operation": "scrape",
+        "template": "",
+        "value": "CX_name",
+        "wait": 0
+      }
+    ]
+  },
+  {
+    "category": "Communication",
+    "name": "Search and send SMS",
+    "steps": [
+      {
+        "item": "GlobalSearchBox",
+        "label": "Type case number",
+        "operation": "send_keys",
+        "template": "",
+        "value": "{case_number}",
+        "wait": 1
+      },
+      {
+        "item": "FirstSearchResult",
+        "label": "Open first result",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 2
+      },
+      {
+        "item": "",
+        "label": "Read customer name",
+        "operation": "scrape",
+        "template": "",
+        "value": "CX_name",
+        "wait": 0
+      },
+      {
+        "item": "AddMenuButton",
+        "label": "Open + menu",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 1
+      },
+      {
+        "item": "FlyoutMenuItemSMS",
+        "label": "Pick SMS",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 2
+      },
+      {
+        "item": "SMSTextInput",
+        "label": "Type SMS",
+        "operation": "send_keys",
+        "template": "SMS_1",
+        "value": "",
+        "wait": 2
+      },
+      {
+        "item": "SMSSaveClose",
+        "label": "Save and close",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 3
+      }
+    ]
+  },
+  {
+    "category": "Case",
+    "name": "Copilot summary",
+    "steps": [
+      {
+        "item": "",
+        "label": "Search case and open",
+        "operation": "run_flow",
+        "template": "",
+        "value": "Search and open case",
+        "wait": 3
+      },
+      {
+        "item": "Copilot",
+        "label": "Copilot Button",
+        "operation": "click",
+        "template": "",
+        "value": "",
+        "wait": 3
+      },
+      {
+        "item": "CopilotSummary",
+        "label": "Get the summary",
+        "operation": "scrape",
+        "template": "",
+        "value": "",
+        "wait": 4
+      }
+    ]
+  },
+  {
+    "name": "Problem Description",
+    "category": "Case",
+    "steps": [
+      {
+        "label": "Open Case",
+        "operation": "run_flow",
+        "item": "",
+        "value": "Search and open case",
+        "template": "",
+        "wait": 3
+      },
+      {
+        "label": "get the problem description",
+        "operation": "scrape",
+        "item": "ProblemDescription",
+        "value": "",
+        "template": "",
+        "wait": 1
+      }
+    ]
+  }
+]
