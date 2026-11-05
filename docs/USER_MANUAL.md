@@ -2,7 +2,7 @@
 
 A step-by-step guide to installing Nitros Automation, finding page elements with **Katalon Recorder**, building your own automations, and doing your **first run**.
 
-> **Who this is for:** support and operations agents who work cases in Dynamics 365 (and optionally a Genesys WWE dialer). You don't need to know how to program. You will need to copy and paste a few commands and fill in some Excel cells.
+> **Who this is for:** support and operations agents who work cases in a web CRM such as Dynamics 365, Salesforce or Odoo (and optionally a Genesys WWE dialer). The examples use Dynamics 365; see [6.8](#68-salesforce-odoo-and-other-crms) for other CRMs. You don't need to know how to program. You will need to copy and paste a few commands and fill in some Excel cells.
 
 ---
 
@@ -216,6 +216,8 @@ For each locator, Nitros tries these in order and uses the **first visible match
 2. If Strategy is **not** XPATH: the **Value** with that strategy (ID, NAME, CSS…).
 3. If Strategy is XPATH: the **Value** with the saved **Match**, then the other two match types.
 
+With Attribute `text`, every match type picks the **innermost** element holding the text (for example the `<span>` inside a button, not the toolbar or the whole page around it). Clicking it still clicks the button.
+
 When a different match type works than the one saved, Nitros **writes the working one back into the Match column** (see the log line `matched with 'contains' … saving`). Over time your sheet improves itself, but only if Excel isn't holding the file open.
 
 ### 3.5 Alternative: Chrome DevTools (no extension)
@@ -233,7 +235,7 @@ $x("//*[contains(@id,'GlobalSearchBox')]")
 ```
 
 - `[input#GlobalSearchBox]` (exactly **one** result): good.
-- `[]` (empty): the XPath is wrong, or the element is inside an iframe or a not-yet-opened panel.
+- `[]` (empty): the XPath is wrong, or the element is inside an iframe, a Shadow DOM component (common in Salesforce Lightning) or a not-yet-opened panel. Nitros searches iframes and open Shadow DOM itself, so a locator can work in a run even when `$x()` shows `[]`. See [6.8](#68-salesforce-odoo-and-other-crms).
 - Several results: add another fragment (`|`) or use a more specific attribute.
 
 For CSS, use `document.querySelectorAll("#GlobalSearchBox")`.
@@ -254,11 +256,11 @@ Your browser opens **http://127.0.0.1:5057** automatically. Keep the PowerShell 
 
 | Section | Field | Notes |
 | --- | --- | --- |
-| Genesys | User, Password, Place ID | Saved to **Windows Credential Manager**, never to a file. **Required to start a run**, even if you don't use a dialer. If you don't, type any placeholder (for example `none`) in all three. Password: leave blank to keep the saved one |
+| Dialer login (optional) | User, Password, Place ID | Only needed if your flows log in to a Genesys WWE dialer. Leave blank otherwise. Saved to **Windows Credential Manager**, never to a file. Password: leave blank to keep the saved one |
 | Agent | Display name | Used for `{agent_name}` in messages |
 | Workbooks | Locators.xlsx, Cases.xlsx | Paths to your sheets. The copy buttons copy the path |
-| Endpoints | CRM | **Required.** Your Dynamics URL, for example `https://<your-org>.crm.dynamics.com` |
-| Endpoints | Dialer | Your Genesys WWE login page (only needed for dialer flows) |
+| Endpoints | CRM | **Required.** The page Chrome opens first, for example `https://<your-org>.crm.dynamics.com`, `https://<your-org>.lightning.force.com` or `https://<your-company>.odoo.com/odoo` |
+| Endpoints | Dialer (optional) | Your Genesys WWE login page (only needed for dialer flows) |
 | Chrome | User data folder, Profile folder | Leave **User data folder** empty to use a dedicated profile in `data/chrome_profile` (recommended) |
 
 Click **Save setup**. Settings go to `data/config.json`.
@@ -365,11 +367,11 @@ The browser opens **http://127.0.0.1:5057**. Leave the PowerShell window open.
 ### Step 2: Fill in Setup
 
 1. Open the **Setup** tab.
-2. **CRM:** your Dynamics 365 URL (copy it from the address bar when you're on the CRM home page).
+2. **CRM:** your CRM's address (copy it from the address bar when you're on the CRM home page).
 3. **Display name:** your name as it should appear in messages.
-4. **Genesys User / Password / Place ID:** your dialer login, or `none` in all three if you won't use the dialer.
+4. **Dialer login:** your Genesys user, password and place ID if you use the dialer. Otherwise leave them blank.
 5. Leave **Chrome → User data folder** empty.
-6. Click **Save setup**. The *Saved* label appears next to Genesys.
+6. Click **Save setup**.
 
 ### Step 3: Add test case numbers
 
@@ -524,6 +526,23 @@ Step 1 reuses the existing flow, which also scrapes `{CX_name}`, so the template
 - **Reuse:** keep small building-block flows (open case, log in) and combine them with **Run another flow**.
 - **Dialogs:** Chrome's "connection is not private" page and the Genesys *Integration Enabled* alert are dismissed automatically before every step. Other dialogs (for example *Discard changes*) need their own **Click** step; locators such as `DiscardChangesButton` are in the sample sheet.
 
+
+### 6.8 Salesforce, Odoo and other CRMs
+
+Nitros works with any CRM that runs in Chrome. Nothing in the flows is tied to Dynamics 365: set **Setup → CRM** to your CRM's address, record its elements as in [section 3](#3-find-elements-with-katalon-recorder) and build flows from the same steps. The sample locators in `Locators.xlsx` are for Dynamics 365, so record your own.
+
+**Odoo.** Pages are plain HTML, so Katalon targets and DevTools XPaths work as they are. Good attributes are `name` (fields such as `name="partner_id"`) and `data-menu-xmlid` on menu items. Odoo loads views without reloading the page, so give steps after a click a **Wait** of 1–2 seconds.
+
+**Salesforce Lightning.**
+- **Avoid IDs.** Lightning generates new ones on every load (for example `input-123`). Use `name`, `title`, `placeholder`, `aria-label`, `data-*` attributes or the element's text.
+- **Shadow DOM.** Many Lightning components hide their inner elements inside a *shadow root*. Nitros searches open shadow roots automatically, with every Strategy. Two limits:
+  - In a shadow root, **Full XPath** only works if it starts with `//`. A position-based path (`/html/body/...`) can't reach inside one.
+  - Chrome's `$x()` can't see into shadow roots, so it may show `[]` for a locator that works in a run. In DevTools, select the element and check that its attributes match your Value.
+- **Console and Classic views** put records in iframes. Nitros searches those too.
+- **Lightning opens records in workspace tabs inside the page**, not as new Chrome tabs, so you don't need *Switch to tab* for them.
+
+**Without a dialer.** Leave **Setup → Dialer login** and **Dialer** blank and don't use the *Dialer login* flow. A flow that uses `{genesys_user}`, `{genesys_password}` or `{genesys_place}` stops with `variable ... has no value` until they're saved.
+
 ---
 
 ## 7. Run from the command line
@@ -547,7 +566,7 @@ Output is printed to the window. Settings, credentials, flows and sheets are the
 
 | Problem / message | Cause | Fix |
 | --- | --- | --- |
-| `Save the Genesys user, password and place ID in the Setup tab first` | No credentials in the keyring | Fill all three in **Setup** (placeholders are fine if you don't use a dialer) and save |
+| `variable 'genesys_user' has no value` (or `genesys_password` / `genesys_place`) | A flow uses the dialer login but it isn't saved | Fill in **Setup → Dialer login** and save, or remove the dialer steps |
 | `CRM URL is not set` | Setup → CRM is empty | Enter it and **Save setup** |
 | `element 'X' not found` | The locator doesn't match the page, or the page wasn't ready | Check with Katalon **Find** or `$x()`. Increase the previous step's **Wait**. Look at the screenshot in `data\logs\errors\` |
 | A locator never matches, even though it looks right | A Katalon prefix (`id=`, `css=`, `xpath=`) was pasted into **Full XPath** | Clear Full XPath or remove the prefix. See [3.4](#34-copy-the-target-into-locatorsxlsx) |

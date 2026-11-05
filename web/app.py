@@ -215,8 +215,6 @@ def start_run():
     setup_flow = (data.get("setup_flow") or "").strip()
     if not case_flow:
         return _error("Choose a case flow")
-    if not credentials.is_configured():
-        return _error("Save the Genesys user, password and place ID in the Setup tab first")
     with _runner_lock:
         if _runner_proc and _runner_proc.poll() is None:
             return _error("An automation run is already in progress", 409)

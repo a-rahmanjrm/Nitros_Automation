@@ -2,7 +2,7 @@
 
     python -m core.runner --case-flow "Search and open case" [--setup-flow "Dialer login"]
 
-It reads the saved credentials, flows, scrape map, Locators.xlsx and Cases.xlsx,
+It reads the saved (optional) dialer credentials, flows, scrape map, Locators.xlsx and Cases.xlsx,
 then runs the setup flow once and the case flow once per case.
 """
 import argparse
@@ -172,13 +172,6 @@ def main(argv=None):
     templates.seed_defaults()
     cfg = config.load_config()
 
-    try:
-        creds = credentials.load_for_run()
-    except credentials.MissingCredentials as e:
-        log(f"[ERROR] {e}")
-        write_status(state="error", message=str(e))
-        return 2
-
     all_flows = {f["name"]: f for f in flows.load_flows()}
     for name in filter(None, (args.case_flow, args.setup_flow)):
         if name not in all_flows:
@@ -195,9 +188,7 @@ def main(argv=None):
     cases = excel_io.read_cases(cfg["cases_path"])
     scrape_map = {s["variable"]: s for s in flows.load_scrape_map()}
     base_vars = {
-        "genesys_user": creds["user"],
-        "genesys_password": creds["password"],
-        "genesys_place": creds["place"],
+        **credentials.run_variables(),
         "dialer_url": cfg["dialer_url"],
         "agent_name": cfg["agent_name"],
     }

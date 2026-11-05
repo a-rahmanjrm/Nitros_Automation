@@ -128,7 +128,10 @@
       if (i === 0 && match === "starts-with") return `starts-with(${target},${lit})`;
       return `contains(${target},${lit})`;
     });
-    return `//*[${conds.join(" and ")}]`;
+    const cond = conds.join(" and ");
+    // Text also matches the elements wrapping it (toolbar div, body, html...): keep the innermost one
+    if (attribute === "text") return `//*[${cond} and not(.//*[${cond}])]`;
+    return `//*[${cond}]`;
   }
   // Pull the first id literal out of a pasted XPath: @id='x', contains(@id,'x') or starts-with(@id,'x').
   // Dynamic numeric tails (e.g. "-420" or "_2") are trimmed so the fragment still matches next time.

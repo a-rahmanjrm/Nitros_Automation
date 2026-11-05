@@ -33,7 +33,7 @@
     <form id="setup-form" autocomplete="off">
 
       <div class="section">
-        <div class="section-label">Genesys <span class="spacer"></span><span class="pill pill-muted" id="pass-state" hidden>Saved</span></div>
+        <div class="section-label">Dialer login (optional) <span class="spacer"></span><span class="pill pill-muted" id="pass-state" hidden>Saved</span></div>
         <div class="card">
           <div class="field">
             <label for="genesys_user">User</label>
@@ -51,6 +51,7 @@
           <div class="field">
             <label for="genesys_place">Place ID</label>
             <div class="control"><input id="genesys_place" name="genesys_place" class="mono"></div>
+            <div class="hint">Only needed if your flows log in to a Genesys WWE dialer. Leave blank otherwise.</div>
           </div>
         </div>
       </div>
@@ -90,10 +91,10 @@
         <div class="card grid-2">
           <div class="field">
             <label for="crm_url">CRM</label>
-            <div class="control"><input id="crm_url" name="crm_url" type="url" inputmode="url"></div>
+            <div class="control"><input id="crm_url" name="crm_url" type="url" inputmode="url" placeholder="https://your-org.my.salesforce.com"></div>
           </div>
           <div class="field">
-            <label for="dialer_url">Dialer</label>
+            <label for="dialer_url">Dialer (optional)</label>
             <div class="control"><input id="dialer_url" name="dialer_url" type="url" inputmode="url"></div>
           </div>
         </div>
