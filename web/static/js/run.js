@@ -41,9 +41,9 @@
       $("run-cases-hint").textContent = e.message;
     }
     const setup = await api("/api/setup").catch(() => null);
-    $("run-summary").textContent = setup && setup.configured
+    $("run-summary").textContent = setup && setup.config && setup.config.crm_url
       ? "Chrome opens to CRM, runs the setup flow once, then the case flow for each case."
-      : "Save your Genesys credentials in Setup before running.";
+      : "Set the CRM address in Setup before running.";
   }
 
   function setButtons(isRunning) {

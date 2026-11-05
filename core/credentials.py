@@ -1,15 +1,13 @@
-"""Genesys credentials, kept in Windows Credential Manager via keyring.
+"""Optional dialer credentials (e.g. Genesys WWE), kept in the OS keyring
+(Windows Credential Manager / macOS Keychain).
 
+They are only needed when a flow uses {genesys_user}, {genesys_password} or {genesys_place}.
 The password is never returned to the UI or written to disk or git.
 """
 import keyring
 
 SERVICE = "NitrosAutomation"
 _KEYS = {"user": "genesys_user", "password": "genesys_password", "place": "genesys_place"}
-
-
-class MissingCredentials(Exception):
-    pass
 
 
 def _get(field):
@@ -35,7 +33,7 @@ def is_configured():
     return all(_get(field) for field in _KEYS)
 
 
-def load_for_run():
-    if not is_configured():
-        raise MissingCredentials("Genesys user, password and place ID must be saved in the Setup tab first")
-    return {field: _get(field) for field in _KEYS}
+def run_variables():
+    """Saved credentials as flow variables. Unsaved ones are left out, so a flow that uses
+    one fails with a clear 'variable has no value' error instead of typing an empty string."""
+    return {key: value for field, key in _KEYS.items() if (value := _get(field))}

@@ -2,7 +2,10 @@
 
 Each lookup tries the locator's match types (contains, starts-with, exact) in the current
 window first, then every open Chrome tab, and inside every iframe (Dynamics 365 puts the
-record form in nested iframes, and the dialer is usually in its own tab).
+record form in nested iframes, and a dialer is usually in its own tab).
+
+In each document it also looks inside open Shadow DOM roots, which XPath and normal
+find_elements cannot see into (Salesforce Lightning web components use them).
 """
 import time
 
@@ -17,6 +20,93 @@ from selenium.webdriver.common.keys import Keys
 from core.locators import candidates
 
 MAX_FRAME_DEPTH = 3
+MAX_SHADOW_MATCHES = 25
+
+# Runs in the page: collects every open shadow root (nested ones too) and returns, for each
+# candidate, the elements it matches inside those roots. Chromium will not run XPath with a
+# shadow root as the context node, so XPath runs from the root's first element instead,
+# where "//" means "anywhere in this shadow tree". Closed shadow roots cannot be reached.
+_SHADOW_SEARCH_JS = """
+const cands = arguments[0], limit = arguments[1];
+const roots = [];
+(function collect(node) {
+  for (const el of node.querySelectorAll('*')) {
+    if (el.shadowRoot) { roots.push(el.shadowRoot); collect(el.shadowRoot); }
+  }
+})(document);
+if (!roots.length) return [];
+const quote = (v) => '"' + CSS.escape(String(v)) + '"';
+return cands.map(([kind, sel]) => {
+  const out = [];
+  for (const root of roots) {
+    try {
+      if (kind === 'xpath') {
+        const ctx = root.firstElementChild;
+        if (!ctx) continue;
+        const res = document.evaluate(sel, ctx, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+        for (let i = 0; i < res.snapshotLength; i++) {
+          const n = res.snapshotItem(i);
+          if (n.nodeType === 1) out.push(n);
+        }
+      } else {
+        const css = kind === 'id' ? '[id=' + quote(sel) + ']'
+          : kind === 'name' ? '[name=' + quote(sel) + ']'
+          : kind === 'class' ? '.' + CSS.escape(sel)
+          : sel;
+        out.push(...root.querySelectorAll(css));
+      }
+    } catch (e) { /* selector not valid here: skip this root */ }
+    if (out.length >= limit) break;
+  }
+  return out.slice(0, limit);
+});
+"""
+
+_SHADOW_KINDS = {
+    By.ID: "id",
+    By.NAME: "name",
+    By.CLASS_NAME: "class",
+    By.CSS_SELECTOR: "css",
+    By.TAG_NAME: "css",
+}
+
+
+def _shadow_candidates(cands):
+    """(label, kind, selector) for the candidates that can be searched inside shadow roots.
+    Absolute XPaths ('/html/body/...') cannot point inside a shadow tree, so they are skipped."""
+    out = []
+    for label, by, locator in cands:
+        if by == By.XPATH:
+            if not locator.startswith("/") or locator.startswith("//"):
+                out.append((label, "xpath", locator))
+        elif by in _SHADOW_KINDS:
+            out.append((label, _SHADOW_KINDS[by], locator))
+    return out
+
+
+def _first_displayed(elements):
+    for element in elements:
+        try:
+            if element.is_displayed():
+                return element
+        except (StaleElementReferenceException, WebDriverException):
+            continue
+    return None
+
+
+def _shadow_match(driver, cands):
+    shadow = _shadow_candidates(cands)
+    if not shadow:
+        return None, None
+    try:
+        results = driver.execute_script(_SHADOW_SEARCH_JS, [[k, s] for _, k, s in shadow], MAX_SHADOW_MATCHES)
+    except WebDriverException:
+        return None, None
+    for (label, _, _), found in zip(shadow, results or []):
+        element = _first_displayed(found or [])
+        if element is not None:
+            return element, label
+    return None, None
 
 
 def _displayed_match(driver, cands):
@@ -25,13 +115,10 @@ def _displayed_match(driver, cands):
             found = driver.find_elements(by, locator)
         except InvalidSelectorException:
             continue
-        for element in found:
-            try:
-                if element.is_displayed():
-                    return element, label
-            except StaleElementReferenceException:
-                continue
-    return None, None
+        element = _first_displayed(found)
+        if element is not None:
+            return element, label
+    return _shadow_match(driver, cands)
 
 
 def _walk_frames(driver, cands, depth):

@@ -45,7 +45,9 @@ def build_xpath(attribute, value, match):
     Each fragment becomes its own condition, joined with 'and'. The first fragment uses the
     match type (contains / starts-with / exact); later fragments always use contains, and
     'exact' with more than one fragment falls back to contains because one attribute cannot equal several values.
-    Attribute 'text' matches the element's text.
+    Attribute 'text' matches the element's text. A text match also holds for elements that wrap
+    the text (a toolbar div, body, html...), so it is narrowed to the innermost element: one that
+    matches but has no matching descendant.
     """
     parts = split_parts(value)
     if not parts:
@@ -60,7 +62,10 @@ def build_xpath(attribute, value, match):
             conditions.append(f"starts-with({target},{literal})")
         else:
             conditions.append(f"contains({target},{literal})")
-    return f"//*[{' and '.join(conditions)}]"
+    condition = " and ".join(conditions)
+    if attribute == "text":
+        return f"//*[{condition} and not(.//*[{condition}])]"
+    return f"//*[{condition}]"
 
 
 def candidates(row):

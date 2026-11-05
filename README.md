@@ -37,7 +37,7 @@
 
 ## 📖 About
 
-Nitros Automation is a no-code browser automation tool for support agents who work cases in Microsoft Dynamics 365 and a Genesys Workspace Web Edition (WWE) dialer. You describe a task once as a **flow**: a list of steps such as "search case", "click", "type" or "read a field", built in a local web UI. The tool then runs that flow against every case number in an Excel sheet.
+Nitros Automation is a no-code browser automation tool for support agents who work cases in a web CRM (Microsoft Dynamics 365, Salesforce, Odoo or any other CRM that runs in Chrome), optionally together with a Genesys Workspace Web Edition (WWE) dialer. You describe a task once as a **flow**: a list of steps such as "search case", "click", "type" or "read a field", built in a local web UI. The tool then runs that flow against every case number in an Excel sheet.
 
 **The problem:** Agents repeat the same clicks for every case: search the case number, open it, copy the customer name, open the SMS form, type a standard message, save. This is slow and easy to get wrong.
 
@@ -53,7 +53,8 @@ Nitros Automation is a no-code browser automation tool for support agents who wo
 - ✅ **Excel-driven**: element locators live in `Locators.xlsx`, case numbers in `Cases.xlsx`.
 - ✅ **Scraping into variables**: read text or attributes from the page (e.g. the customer name) and reuse them in later steps and messages.
 - ✅ **Message templates**: plain-text templates with `{CX_name}`, `{case_number}`, `{agent_name}` and any scraped variable.
-- ✅ **Secure credentials**: the dialer login is kept in the OS keyring (Windows Credential Manager / macOS Keychain), never in files.
+- ✅ **Works with any web CRM**: element lookup searches every tab, nested iframes and open Shadow DOM (Salesforce Lightning).
+- ✅ **Secure credentials**: the optional dialer login is kept in the OS keyring (Windows Credential Manager / macOS Keychain), never in files.
 - ✅ **Reusable Chrome session**: a dedicated Chrome profile keeps your CRM login between runs.
 - ✅ **Failure screenshots and logs**: every failed step is logged and screenshotted locally.
 
@@ -113,7 +114,7 @@ These are created on your machine and are **git-ignored**: `data/config.json`, `
 - [Python](https://www.python.org/downloads/) **3.10** or newer
 - [Google Chrome](https://www.google.com/chrome/) (latest)
 - [Git](https://git-scm.com/)
-- Access to your own Dynamics 365 CRM and, optionally, a Genesys WWE dialer
+- Access to your own web CRM (Dynamics 365, Salesforce, Odoo, ...) and, optionally, a Genesys WWE dialer
 
 ### Installation
 
@@ -161,7 +162,7 @@ Everything is set in the **Setup** tab of the web UI and saved to `data/config.j
 
 | Setting                | Description                                                       | Default               |
 | ---------------------- | ----------------------------------------------------------------- | --------------------- |
-| `crm_url`              | Your Dynamics 365 URL, e.g. `https://<your-org>.crm.dynamics.com` | *(empty, required)*   |
+| `crm_url`              | Your CRM URL, e.g. `https://<your-org>.crm.dynamics.com`          | *(empty, required)*   |
 | `dialer_url`           | Your Genesys WWE login page                                       | *(empty)*             |
 | `agent_name`           | Name used for `{agent_name}` in messages                          | *(empty)*             |
 | `locators_path`        | Path to `Locators.xlsx`                                           | `excel/Locators.xlsx` |
@@ -169,11 +170,13 @@ Everything is set in the **Setup** tab of the web UI and saved to `data/config.j
 | `chrome_user_data_dir` | Chrome "User Data" folder to reuse; empty = `data/chrome_profile` | *(empty)*             |
 | `chrome_profile_dir`   | Chrome profile directory name                                     | `Default`             |
 
-> 🔐 **Credentials** (Genesys user, password, place ID) are stored in your operating system's secure keyring, never in plain text or in this repository.
+> 🔐 **Credentials** (optional Genesys user, password, place ID; only needed for dialer flows) are stored in your operating system's secure keyring, never in plain text or in this repository.
 
 ---
 
 ## 💻 Usage
+
+> 📘 **New here?** The **[User Manual](docs/USER_MANUAL.md)** walks you through installation, finding element IDs/XPaths with **Katalon Recorder**, your first run and building your own flows. A Word copy is in [`docs/Nitros_Automation_User_Manual.docx`](docs/Nitros_Automation_User_Manual.docx).
 
 ### Web UI
 
@@ -183,7 +186,7 @@ python web/app.py
 
 The app opens at **http://127.0.0.1:5057**. Work through the tabs from left to right:
 
-1. **Setup**: enter the CRM and dialer URLs, your agent name and dialer credentials.
+1. **Setup**: enter the CRM URL and your agent name, plus the dialer URL and credentials if you use a dialer.
 2. **Locators**: add or edit the page elements the flows use (stored in `Locators.xlsx`).
 3. **Templates**: write message templates with `{placeholders}`.
 4. **Flows**: build flows from steps.
@@ -269,7 +272,7 @@ Project link: [https://github.com/arahmanjrm/Nitros_Automation](https://github.c
 
 ## ⚠️ Disclaimer
 
-This is an independent personal project. It is not affiliated with, endorsed by, or supported by Microsoft, Genesys, or any employer or client. It ships no credentials, endpoints or customer data; you supply your own.
+This is an independent personal project. It is not affiliated with, endorsed by, or supported by Microsoft, Salesforce, Odoo, Genesys, or any employer or client. It ships no credentials, endpoints or customer data; you supply your own.
 
 This project is provided "as is", without warranty of any kind. You are responsible for making sure your use of this tool follows the terms of service, security policies and data-handling rules of every system it interacts with. Get permission from your organization before automating its systems.
 
