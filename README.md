@@ -175,6 +175,8 @@ Everything is set in the **Setup** tab of the web UI and saved to `data/config.j
 
 ## 💻 Usage
 
+> 📘 **New here?** The **[User Manual](docs/USER_MANUAL.md)** walks you through installation, finding element IDs/XPaths with **Katalon Recorder**, your first run and building your own flows. A Word copy is in [`docs/Nitros_Automation_User_Manual.docx`](docs/Nitros_Automation_User_Manual.docx).
+
 ### Web UI
 
 ```bash
